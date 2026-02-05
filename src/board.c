@@ -302,3 +302,55 @@ int isValidChain(int allowed, char move) {
         break;
     }
 }
+
+int getMoveX(int currentX, char move) {
+    switch (move)
+    {
+    case 'S':
+        currentX += 2;
+        break;
+    
+    case 'A':
+        currentX -= 2;
+        break;
+    
+    case 'D':
+        currentX += 2;
+        break;
+    
+    case 'W':
+        currentX -= 2;
+        break;
+
+    default:
+        break;
+    }
+
+    return currentX;
+}
+
+int getMoveY(int currentY, char move) {
+    switch (move)
+    {
+    case 'S':
+        currentY += 2;
+        break;
+    
+    case 'A':
+        currentY += 2;
+        break;
+    
+    case 'D':
+        currentY -= 2;
+        break;
+    
+    case 'W':
+        currentY -= 2;
+        break;
+
+    default:
+        break;
+    }
+
+    return currentY;
+}

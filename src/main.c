@@ -7,6 +7,7 @@ int main() {
     move[0] = 'O';
     int allowedChains;
     print_board(board);
+    int x, y;
 
     while (move[0] != 'E') {
         scanf("%s", move);
@@ -15,12 +16,19 @@ int main() {
 
             printf("AllowedChains: %d\n", allowedChains);
 
+            x = move[2] - '0';
+            y = move[1] - '0';
+            x = getMoveX(x, move[3]);
+            y = getMoveY(y, move[3]);
+
             while(move[0] != 'N' && allowedChains) {
                 print_board(board);
                 printf("Can chain move\n");
                 scanf("%s", move);
-                if (isValidChain(allowedChains, move[3])) {
+                if (move[2] == x + '0' && move[1] == y + '0' && isValidChain(allowedChains, move[3])) {
                     allowedChains = movePiece(board, move);
+                    x = getMoveX(x, move[3]);
+                    y = getMoveY(y, move[3]);
                     printf("AllowedChains: %d\n", allowedChains);
                 }
                 else {
