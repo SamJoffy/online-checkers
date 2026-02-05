@@ -94,31 +94,14 @@ char *create_board() {
     return board;
 }
 
-/** Checks if the given jump is valid. Returns -1 if can chain into another jump. Assumes move has already been multiplied
- *  by two.
- */
+/** Checks if the given jump is valid. Assumes move has already been multiplied by two. */
 int isJumpMoveValid(char *board, int x, int y, int xMove, int yMove, char color) {
     if (x + xMove < 0 || x + xMove >= BOARD_WIDTH || y + yMove < 0 || y + yMove > BOARD_HEIGHT) {
         return 0;
     }
 
-    if (getCharAt(board, x + xMove, y + yMove) != 'O') {
+    if (getCharAt(board, x + xMove, y + yMove) != 'O' || isSameColor(getCharAt(board, x + xMove/2, y + yMove/2), color) || getCharAt(board, x + xMove/2, y + yMove/2) == 'O') {
         return 0;
-    }
-
-    // Check if can chain jump
-    int moves[] = {-2, 2};
-    for (int xCheck = 0; xCheck < 2; xCheck++) {
-        for (int yCheck = 0; yCheck < 2; yCheck++) {
-            if ((xMove != moves[xCheck] || yMove != moves[yCheck]) && 
-                !(x + xMove + moves[xCheck] < 0 || x + xMove + moves[xCheck] >= BOARD_WIDTH || y + yMove + moves[yCheck] < 0 || y + yMove + moves[yCheck] > BOARD_HEIGHT) && 
-                !isSameColor(getCharAt(board, x + xMove + moves[xCheck]/2, y + yMove + moves[yCheck]/2), color) && 
-                getCharAt(board, x + xMove + moves[xCheck]/2, y + yMove + moves[yCheck]/2) != 'O' && 
-                getCharAt(board, x + xMove + moves[xCheck], y + yMove + moves[yCheck]) == 'O') {
-                    
-                return -1;
-            }
-        }
     }
 
     return 1;
@@ -216,7 +199,10 @@ int isValidMove(char *board, char *move) {
     return 1;
 }
 
-/** Performs the given move on the board. Assumes the move is valid */
+/** Performs the given move on the board. Assumes the move is valid. Returns an integer 
+ *  with a binary representation corresponding to which moves it can chain into.
+ *  In the format SADW
+*/
 int movePiece(char *board, char *move) {
     int x = move[2] - '0';
     int y = move[1] - '0';
@@ -249,17 +235,20 @@ int movePiece(char *board, char *move) {
         return 0;
     }
 
+    int jumped = 0;
+
     if (getCharAt(board, x + xMove, y + yMove) == 'O') {
         setCharAt(board, x, y, 'O');
-        setCharAt(board, x + xMove, y + yMove, color); // Might need to change this line for queens
+        setCharAt(board, x + xMove, y + yMove, color);
     }
     else {
         setCharAt(board, x, y, 'O');
         setCharAt(board, x + xMove, y + yMove, 'O');
         xMove *= 2;
         yMove *= 2;
-        setCharAt(board, x + xMove, y + yMove, color); // Might need to change this line for queens
-        piece_count[isSameColor(color, 'R')]--; //  And this line
+        setCharAt(board, x + xMove, y + yMove, color);
+        piece_count[isSameColor(color, 'R')]--;
+        jumped = 1;
     }
 
     if (y + yMove == BOARD_HEIGHT - 1 && color == 'B') {
@@ -269,5 +258,47 @@ int movePiece(char *board, char *move) {
         setCharAt(board, x + xMove, y + yMove, 'Q');
     }
 
-    return 0;
+    int chain = 0;
+
+    if (jumped) {
+        printf("Board while looking for chains:\n");
+        print_board(board);
+
+        int moves[] = {-2, 2};
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                if (isJumpMoveValid(board, x + xMove, y + yMove, moves[i], moves[j], color)) {
+                    chain += 1 << (i + 2*j);
+                }
+            }
+        }
+    }
+
+    return chain;
+}
+
+// todo: make sure is right piece
+int isValidChain(int allowed, char move) {
+    switch (move)
+    {
+    case 'S':
+        return 8 & allowed;
+        break;
+    
+    case 'A':
+        return 4 & allowed;
+        break;
+    
+    case 'D':
+        return 2 & allowed;
+        break;
+    
+    case 'W':
+        return 1 & allowed;
+        break;
+
+    default:
+        return 0;
+        break;
+    }
 }
